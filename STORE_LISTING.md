@@ -13,6 +13,14 @@ Not part of the extension package itself.
 - **Language**: English (default), with Japanese `_locales` already bundled
 - **Version**: 1.0.0
 
+**Privacy Policy URL — important**: the link below currently points at the
+`claude/relaxed-goodall-noh90l` branch because that's what's live right now
+(the repo is public, but `main` doesn't have `PRIVACY.md` yet). Once this
+branch is merged into `main`, switch the URL in the Developer Dashboard
+(and in this file) to:
+`https://github.com/bravotan/chrome-extension-audio-volume/blob/main/PRIVACY.md`
+— shorter and won't break if the feature branch is later deleted.
+
 ## Short description (≤132 characters)
 
 EN:
@@ -55,7 +63,7 @@ PRIVACY
 Volume Reducer collects no data and makes no network requests of its own.
 Your volume rules stay on your device, synced only through your own Google
 account via Chrome's built-in sync. Full privacy policy:
-https://github.com/bravotan/chrome-extension-audio-volume/blob/main/PRIVACY.md
+https://github.com/bravotan/chrome-extension-audio-volume/blob/claude/relaxed-goodall-noh90l/PRIVACY.md
 ```
 
 JA:
@@ -81,7 +89,7 @@ JA:
 プライバシーについて
 「音量絞り器」はユーザーデータを収集せず、外部通信も一切行いません。設定はお使いの
 Googleアカウント経由のChrome同期のみを通じて保存されます。プライバシーポリシー全文:
-https://github.com/bravotan/chrome-extension-audio-volume/blob/main/PRIVACY.md
+https://github.com/bravotan/chrome-extension-audio-volume/blob/claude/relaxed-goodall-noh90l/PRIVACY.md
 ```
 
 ## Permission justifications (Privacy practices tab)
