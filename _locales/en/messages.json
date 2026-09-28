@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Volume Booster: Per-Site Volume",
+    "description": "Extension name shown in the Chrome Web Store and extensions page."
+  },
+  "extDescription": {
+    "message": "Boost or lower audio volume per domain or page path, from 0% to 500%. Settings are saved and synced automatically.",
+    "description": "Extension description shown in the Chrome Web Store and extensions page."
+  }
+}

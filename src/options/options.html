@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title data-i18n="settingsTitle">Volume Booster settings</title>
+<link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="top-header">
+      <div class="brand">
+        <img src="../../icons/icon48.png" alt="" width="28" height="28" />
+        <h1 data-i18n="appName">Volume Booster</h1>
+      </div>
+      <div class="top-actions">
+        <label class="lang-label">
+          <span data-i18n="language">Language</span>
+          <select id="langSelect">
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+          </select>
+        </label>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button type="button" class="tab active" data-tab="domains" data-i18n="tabDomains">Domains</button>
+      <button type="button" class="tab" data-tab="settings" data-i18n="tabSettings">Settings</button>
+    </nav>
+
+    <section id="tabDomains" class="tab-panel active">
+      <div class="panel-toolbar">
+        <p class="hint" data-i18n="scopeHint">Domains are applied in order; more specific scopes take precedence.</p>
+        <div class="toolbar-buttons">
+          <button type="button" id="refreshBtn" class="btn btn-ghost">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>
+            </svg>
+            <span data-i18n="refresh">Refresh</span>
+          </button>
+          <button type="button" id="addDomainBtn" class="btn btn-primary" data-i18n="addDomain">Add domain</button>
+        </div>
+      </div>
+
+      <div id="tableWrap" class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th data-i18n="domain">Domain</th>
+              <th data-i18n="scope">Scope</th>
+              <th data-i18n="volume">Volume</th>
+              <th data-i18n="mute">Mute</th>
+              <th data-i18n="actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="ruleTableBody"></tbody>
+        </table>
+        <p id="emptyState" class="empty-state hidden" data-i18n="emptyState">
+          No domains saved. Adjust the volume on any page to get started, or add one manually.
+        </p>
+      </div>
+
+      <div class="feature-strip">
+        <div class="feature">
+          <div class="feature-title" data-i18n="preciseControlTitle">Precise Volume Control</div>
+          <div class="feature-desc" data-i18n="preciseControlDesc">Adjust volume from 0% to 500%</div>
+        </div>
+        <div class="feature">
+          <div class="feature-title" data-i18n="autoApplyTitle">Auto-apply Rules</div>
+          <div class="feature-desc" data-i18n="autoApplyDesc">Set once and apply automatically</div>
+        </div>
+        <div class="feature">
+          <div class="feature-title" data-i18n="syncTitle">Sync and backup</div>
+          <div class="feature-desc" data-i18n="syncDesc">Settings sync across your signed-in devices</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tabSettings" class="tab-panel">
+      <div class="settings-card">
+        <h2 data-i18n="import">Import</h2>
+        <p class="hint">JSON</p>
+        <input type="file" id="importFile" accept="application/json" class="hidden" />
+        <button type="button" id="importBtn" class="btn btn-secondary" data-i18n="import">Import</button>
+      </div>
+      <div class="settings-card">
+        <h2 data-i18n="export">Export</h2>
+        <button type="button" id="exportBtn" class="btn btn-secondary" data-i18n="export">Export</button>
+      </div>
+      <div class="settings-card">
+        <h2 data-i18n="deleteAll">Delete all</h2>
+        <button type="button" id="deleteAllBtn" class="btn btn-danger" data-i18n="deleteAll">Delete all</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="ruleDialogBackdrop" class="dialog-backdrop hidden">
+    <div class="dialog" role="dialog" aria-modal="true">
+      <h2 id="dialogTitle" data-i18n="addDomainTitle">Add domain</h2>
+      <div class="dialog-field">
+        <label for="dialogDomain" data-i18n="domain">Domain</label>
+        <input type="text" id="dialogDomain" data-i18n-placeholder="domainPlaceholder" placeholder="e.g. youtube.com or *.spotify.com" />
+      </div>
+      <div class="dialog-field">
+        <label for="dialogScope" data-i18n="scope">Scope</label>
+        <select id="dialogScope">
+          <option value="domain" data-i18n="applyToDomain">All under this domain</option>
+          <option value="path" data-i18n="applyToPath">This path only</option>
+        </select>
+      </div>
+      <div class="dialog-field" id="dialogPathField">
+        <label for="dialogPath">Path</label>
+        <input type="text" id="dialogPath" data-i18n-placeholder="pathPlaceholder" placeholder="e.g. /watch" />
+      </div>
+      <div class="dialog-field">
+        <label for="dialogVolume" data-i18n="volume">Volume</label>
+        <div class="dialog-volume-row">
+          <input type="range" id="dialogVolume" min="0" max="500" step="5" value="100" />
+          <span id="dialogVolumeReadout">100%</span>
+        </div>
+      </div>
+      <label class="mute-row">
+        <input type="checkbox" id="dialogMute" />
+        <span data-i18n="mute">Mute</span>
+      </label>
+      <div class="dialog-actions">
+        <button type="button" id="dialogCancel" class="btn btn-ghost" data-i18n="cancel">Cancel</button>
+        <button type="button" id="dialogSave" class="btn btn-primary" data-i18n="save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../lib/rules.js"></script>
+  <script src="../lib/storage.js"></script>
+  <script src="../lib/i18n.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
