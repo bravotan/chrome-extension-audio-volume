@@ -3,7 +3,7 @@
 (function (global) {
   const STRINGS = {
     en: {
-      appName: "Per-Site Volume",
+      appName: "Volume Reducer",
       settingsForThisPage: "Settings for this page",
       applyTo: "Apply to",
       applyToDomain: "All under this domain",
@@ -13,7 +13,7 @@
       savedList: "Saved list",
       noSavedDomains: "No saved domains yet",
       openSettings: "Open settings page",
-      settingsTitle: "Per-Site Volume settings",
+      settingsTitle: "Volume Reducer settings",
       tabDomains: "Domains",
       tabSettings: "Settings",
       domain: "Domain",
@@ -49,7 +49,7 @@
       currentTabUnsupported: "Volume control isn't available on this page",
     },
     ja: {
-      appName: "サイト別音量",
+      appName: "音量絞り器",
       settingsForThisPage: "このページの設定",
       applyTo: "適用範囲",
       applyToDomain: "このドメイン全体",
@@ -59,7 +59,7 @@
       savedList: "保存済みリスト",
       noSavedDomains: "保存済みのドメインはありません",
       openSettings: "設定ページを開く",
-      settingsTitle: "サイト別音量の設定",
+      settingsTitle: "音量絞り器の設定",
       tabDomains: "ドメイン",
       tabSettings: "設定",
       domain: "ドメイン",

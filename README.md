@@ -1,4 +1,4 @@
-# Per-Site Volume Control
+# Volume Reducer
 
 A Chrome extension (Manifest V3) that lets you lower audio volume — 0% to
 100% — per domain or per page path. Settings are saved with

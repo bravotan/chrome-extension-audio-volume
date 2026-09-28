@@ -227,7 +227,7 @@
     els.exportBtn.addEventListener("click", async () => {
       const data = await STORAGE.exportData();
       const date = new Date().toISOString().slice(0, 10);
-      downloadJson(data, `per-site-volume-export-${date}.json`);
+      downloadJson(data, `volume-reducer-export-${date}.json`);
     });
 
     els.importBtn.addEventListener("click", () => els.importFile.click());
