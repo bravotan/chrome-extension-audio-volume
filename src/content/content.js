@@ -17,16 +17,52 @@
   let sharedCtx = null;
   const registry = new WeakMap(); // element -> { source, gainNode, failed }
 
+  // IMPORTANT: once an element is routed through createMediaElementSource(), that
+  // routing can never be undone — the element can no longer play directly to
+  // speakers, only through the (possibly suspended) AudioContext graph. Wiring an
+  // element up before we're confident audio will actually flow permanently
+  // silences it, with no way back short of a page reload. So we only ever create
+  // that routing once we know a) the user has interacted with the page (needed
+  // for the context to run at all under the autoplay policy) and b) the element
+  // isn't DRM-protected (Chrome silently blackouts Web-Audio-routed EME content,
+  // without throwing, which would otherwise hit the same irreversible trap).
+  let gestureSeen = false;
+
+  function isProtectedMedia(el) {
+    return Boolean(el.mediaKeys);
+  }
+
+  function onGesture() {
+    if (sharedCtx && sharedCtx.state === "suspended") {
+      sharedCtx.resume().catch(() => {});
+    }
+    if (!gestureSeen) {
+      gestureSeen = true;
+      // Retroactively wire up any elements that were capped at 100% while we
+      // were waiting for permission to actually produce sound.
+      applyToAllKnown(document);
+    }
+  }
+  ["click", "keydown", "touchstart", "pointerdown"].forEach((evt) =>
+    document.addEventListener(evt, onGesture, { capture: true, passive: true })
+  );
+
   function getSharedContext() {
     if (!sharedCtx) {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       sharedCtx = new AudioCtx();
-      const resume = () => {
-        if (sharedCtx && sharedCtx.state === "suspended") sharedCtx.resume().catch(() => {});
-      };
-      ["click", "keydown", "touchstart", "pointerdown"].forEach((evt) =>
-        document.addEventListener(evt, resume, { capture: true, passive: true })
-      );
+      sharedCtx.resume().catch(() => {});
+      // Belt-and-suspenders: in a cross-origin iframe the gesture that unlocks
+      // audio may land in a different frame than this one, so our own
+      // click/keydown listeners never fire. Keep quietly retrying resume()
+      // rather than staying stuck suspended forever.
+      const retry = setInterval(() => {
+        if (!sharedCtx || sharedCtx.state === "running") {
+          clearInterval(retry);
+          return;
+        }
+        sharedCtx.resume().catch(() => {});
+      }, 1000);
     }
     return sharedCtx;
   }
@@ -46,8 +82,9 @@
     el.muted = Boolean(effectiveMuted) || safeVolume === 0;
 
     let entry = registry.get(el);
+    const canBoost = boostGain > 1.0001 && gestureSeen && !isProtectedMedia(el);
 
-    if (boostGain > 1.0001) {
+    if (canBoost) {
       if (!entry) {
         entry = createRoutingEntry(el);
       }
@@ -68,8 +105,8 @@
       source.connect(gainNode).connect(ctx.destination);
       entry = { source, gainNode, failed: false };
     } catch (err) {
-      // Likely DRM-protected media (EME) refusing Web Audio routing, or the
-      // element was already connected elsewhere. Volume stays capped at 100%.
+      // The element was already connected elsewhere, or some other one-off
+      // failure. Volume stays capped at 100% for it.
       entry = { source: null, gainNode: null, failed: true };
     }
     registry.set(el, entry);
