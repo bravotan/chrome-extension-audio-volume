@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Volume Booster</title>
+<title>Per-Site Volume</title>
 <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
@@ -10,7 +10,7 @@
     <header class="header">
       <div class="brand">
         <img src="../../icons/icon32.png" alt="" width="22" height="22" />
-        <span data-i18n="appName">Volume Booster</span>
+        <span data-i18n="appName">Per-Site Volume</span>
       </div>
       <div class="header-actions">
         <select id="langSelect" class="lang-select" aria-label="Language">
@@ -49,15 +49,15 @@
 
       <div class="volume-block">
         <div class="volume-readout" id="volumeReadout">100%</div>
-        <input type="range" id="volumeSlider" min="0" max="500" step="5" value="100" />
+        <input type="range" id="volumeSlider" min="0" max="100" step="5" value="100" />
         <div class="slider-ticks">
-          <span>0%</span><span>100%</span><span>200%</span><span>300%</span><span>500%</span>
+          <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
         </div>
         <div class="presets" id="presets">
+          <button type="button" data-value="25">25%</button>
           <button type="button" data-value="50">50%</button>
+          <button type="button" data-value="75">75%</button>
           <button type="button" data-value="100">100%</button>
-          <button type="button" data-value="150">150%</button>
-          <button type="button" data-value="200">200%</button>
         </div>
         <label class="mute-row">
           <input type="checkbox" id="muteCheckbox" />

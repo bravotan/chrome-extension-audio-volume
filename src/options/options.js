@@ -71,7 +71,7 @@
       const slider = document.createElement("input");
       slider.type = "range";
       slider.min = "0";
-      slider.max = "500";
+      slider.max = "100";
       slider.step = "5";
       slider.value = String(RULES.clampVolume(rule.volume));
       slider.className = "volume-mini-slider";
@@ -227,7 +227,7 @@
     els.exportBtn.addEventListener("click", async () => {
       const data = await STORAGE.exportData();
       const date = new Date().toISOString().slice(0, 10);
-      downloadJson(data, `volume-booster-export-${date}.json`);
+      downloadJson(data, `per-site-volume-export-${date}.json`);
     });
 
     els.importBtn.addEventListener("click", () => els.importFile.click());

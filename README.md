@@ -1,7 +1,7 @@
-# Volume Booster — Per-Site Volume
+# Per-Site Volume Control
 
-A Chrome extension (Manifest V3) that lets you set a custom audio volume — from
-0% to 500% — per domain or per page path. Settings are saved with
+A Chrome extension (Manifest V3) that lets you lower audio volume — 0% to
+100% — per domain or per page path. Settings are saved with
 `chrome.storage.sync` so they follow you across signed-in devices, and apply
 automatically every time you visit a matching page.
 
@@ -10,12 +10,14 @@ existing extension).
 
 ## How it works
 
-- **0–100%** is handled by the native `HTMLMediaElement.volume` API.
-- **100–500%** (boosting past normal volume) is handled by routing audio
-  through a `Web Audio API` `GainNode`. This is created lazily, only for pages
-  that need a boost, and falls back gracefully (capped at 100%) on
-  DRM-protected media that refuses Web Audio routing (e.g. some streaming
-  services' protected content).
+- Volume is applied via the native `HTMLMediaElement.volume` / `.muted` APIs
+  only — no Web Audio API routing. An earlier version boosted volume past
+  100% with a `GainNode`, but that routing is irreversible once made (an
+  element can never go back to playing directly to speakers) and silently,
+  permanently mutes the page if the browser's autoplay policy hasn't yet
+  allowed audio to play, or if the media is DRM-protected. Sticking to native
+  volume avoids that failure mode entirely, at the cost of not being able to
+  boost past 100%.
 - Rules are matched by domain (exact or `*.wildcard`) and, optionally, a page
   path. When both a domain-level and a path-level rule could apply, the more
   specific (path-level) rule wins.
@@ -55,7 +57,7 @@ src/
 
 ## Features
 
-- Precise volume control, 0%–500%, with quick presets (50/100/150/200%) and a
+- Volume control, 0%–100%, with quick presets (25/50/75/100%) and a
   per-site mute toggle.
 - Apply a rule to an entire domain (with `*.` wildcard support for
   subdomains) or to a single page path.

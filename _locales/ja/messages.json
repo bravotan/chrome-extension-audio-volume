@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "音量ブースター: サイトごとの音量調整",
+    "message": "サイト別音量コントロール",
     "description": "Extension name shown in the Chrome Web Store and extensions page."
   },
   "extDescription": {
-    "message": "ドメインまたはページのパスごとに音量を0%から500%まで調整できます。設定は自動的に保存・同期されます。",
+    "message": "ドメインまたはページのパスごとに音量を0%から100%まで調整できます。設定は自動的に保存・同期されます。",
     "description": "Extension description shown in the Chrome Web Store and extensions page."
   }
 }

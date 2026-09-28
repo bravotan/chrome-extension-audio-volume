@@ -3,7 +3,7 @@
 (function (global) {
   const STRINGS = {
     en: {
-      appName: "Volume Booster",
+      appName: "Per-Site Volume",
       settingsForThisPage: "Settings for this page",
       applyTo: "Apply to",
       applyToDomain: "All under this domain",
@@ -13,7 +13,7 @@
       savedList: "Saved list",
       noSavedDomains: "No saved domains yet",
       openSettings: "Open settings page",
-      settingsTitle: "Volume Booster settings",
+      settingsTitle: "Per-Site Volume settings",
       tabDomains: "Domains",
       tabSettings: "Settings",
       domain: "Domain",
@@ -39,7 +39,7 @@
       importSuccess: "Import complete",
       importError: "Could not read that file",
       preciseControlTitle: "Precise Volume Control",
-      preciseControlDesc: "Adjust volume from 0% to 500%",
+      preciseControlDesc: "Adjust volume from 0% to 100%",
       autoApplyTitle: "Auto-apply Rules",
       autoApplyDesc: "Set once and apply automatically",
       syncTitle: "Sync and backup",
@@ -49,7 +49,7 @@
       currentTabUnsupported: "Volume control isn't available on this page",
     },
     ja: {
-      appName: "音量ブースター",
+      appName: "サイト別音量",
       settingsForThisPage: "このページの設定",
       applyTo: "適用範囲",
       applyToDomain: "このドメイン全体",
@@ -59,7 +59,7 @@
       savedList: "保存済みリスト",
       noSavedDomains: "保存済みのドメインはありません",
       openSettings: "設定ページを開く",
-      settingsTitle: "音量ブースターの設定",
+      settingsTitle: "サイト別音量の設定",
       tabDomains: "ドメイン",
       tabSettings: "設定",
       domain: "ドメイン",
@@ -85,7 +85,7 @@
       importSuccess: "インポートが完了しました",
       importError: "ファイルを読み込めませんでした",
       preciseControlTitle: "精密な音量調整",
-      preciseControlDesc: "0%から500%まで音量を調整",
+      preciseControlDesc: "0%から100%まで音量を調整",
       autoApplyTitle: "自動適用ルール",
       autoApplyDesc: "一度設定すれば自動的に適用されます",
       syncTitle: "同期とバックアップ",

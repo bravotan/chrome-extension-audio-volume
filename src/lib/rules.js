@@ -11,7 +11,7 @@
 
   const DEFAULT_VOLUME = 100;
   const MIN_VOLUME = 0;
-  const MAX_VOLUME = 500;
+  const MAX_VOLUME = 100;
 
   function clampVolume(v) {
     const n = Number(v);

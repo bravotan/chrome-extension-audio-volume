@@ -39,8 +39,7 @@ async function updateBadgeForTab(tabId, url) {
       await chrome.action.setBadgeText({ tabId, text: "" });
       return;
     }
-    const color = volume > RULES.DEFAULT_VOLUME ? "#2563EB" : "#6B7280";
-    await chrome.action.setBadgeBackgroundColor({ tabId, color });
+    await chrome.action.setBadgeBackgroundColor({ tabId, color: "#6B7280" });
     await chrome.action.setBadgeText({ tabId, text: String(volume) });
   } catch (err) {
     // Storage briefly unavailable during startup; leave the badge as-is.

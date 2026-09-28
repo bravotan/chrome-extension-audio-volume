@@ -1,5 +1,9 @@
-// Runs in every page (and every frame). Finds <audio>/<video> elements and drives
-// their volume, boosting past 100% via a shared AudioContext + GainNode when needed.
+// Runs in every page (and every frame). Finds <audio>/<video> elements and applies
+// the matching domain/path volume rule via the native HTMLMediaElement.volume API
+// (0-100%). Deliberately does not attempt to boost past 100% via the Web Audio
+// API — that routing is irreversible once made (an element can never go back to
+// playing directly to speakers) and silently breaks forever on autoplay-suspended
+// contexts or DRM-protected media, so it isn't worth the fragility.
 (function () {
   const RULES = self.VolumeDomain.rules;
   const STORAGE = self.VolumeDomain.storage;
@@ -14,103 +18,15 @@
   let effectiveMuted = false;
   let previewTimer = null;
 
-  let sharedCtx = null;
-  const registry = new WeakMap(); // element -> { source, gainNode, failed }
-
-  // IMPORTANT: once an element is routed through createMediaElementSource(), that
-  // routing can never be undone — the element can no longer play directly to
-  // speakers, only through the (possibly suspended) AudioContext graph. Wiring an
-  // element up before we're confident audio will actually flow permanently
-  // silences it, with no way back short of a page reload. So we only ever create
-  // that routing once we know a) the user has interacted with the page (needed
-  // for the context to run at all under the autoplay policy) and b) the element
-  // isn't DRM-protected (Chrome silently blackouts Web-Audio-routed EME content,
-  // without throwing, which would otherwise hit the same irreversible trap).
-  let gestureSeen = false;
-
-  function isProtectedMedia(el) {
-    return Boolean(el.mediaKeys);
-  }
-
-  function onGesture() {
-    if (sharedCtx && sharedCtx.state === "suspended") {
-      sharedCtx.resume().catch(() => {});
-    }
-    if (!gestureSeen) {
-      gestureSeen = true;
-      // Retroactively wire up any elements that were capped at 100% while we
-      // were waiting for permission to actually produce sound.
-      applyToAllKnown(document);
-    }
-  }
-  ["click", "keydown", "touchstart", "pointerdown"].forEach((evt) =>
-    document.addEventListener(evt, onGesture, { capture: true, passive: true })
-  );
-
-  function getSharedContext() {
-    if (!sharedCtx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      sharedCtx = new AudioCtx();
-      sharedCtx.resume().catch(() => {});
-      // Belt-and-suspenders: in a cross-origin iframe the gesture that unlocks
-      // audio may land in a different frame than this one, so our own
-      // click/keydown listeners never fire. Keep quietly retrying resume()
-      // rather than staying stuck suspended forever.
-      const retry = setInterval(() => {
-        if (!sharedCtx || sharedCtx.state === "running") {
-          clearInterval(retry);
-          return;
-        }
-        sharedCtx.resume().catch(() => {});
-      }, 1000);
-    }
-    return sharedCtx;
-  }
-
   function applyToElement(el) {
     if (!(el instanceof HTMLMediaElement)) return;
-
     const safeVolume = RULES.clampVolume(effectiveVolume);
-    const baseVol = Math.min(1, safeVolume / 100);
-    const boostGain = Math.max(1, safeVolume / 100);
-
     try {
-      el.volume = baseVol;
+      el.volume = safeVolume / 100;
     } catch {
       /* some elements briefly throw while not yet attached to a media resource */
     }
     el.muted = Boolean(effectiveMuted) || safeVolume === 0;
-
-    let entry = registry.get(el);
-    const canBoost = boostGain > 1.0001 && gestureSeen && !isProtectedMedia(el);
-
-    if (canBoost) {
-      if (!entry) {
-        entry = createRoutingEntry(el);
-      }
-      if (entry && entry.gainNode) {
-        entry.gainNode.gain.value = boostGain;
-      }
-    } else if (entry && entry.gainNode) {
-      entry.gainNode.gain.value = 1;
-    }
-  }
-
-  function createRoutingEntry(el) {
-    let entry;
-    try {
-      const ctx = getSharedContext();
-      const source = ctx.createMediaElementSource(el);
-      const gainNode = ctx.createGain();
-      source.connect(gainNode).connect(ctx.destination);
-      entry = { source, gainNode, failed: false };
-    } catch (err) {
-      // The element was already connected elsewhere, or some other one-off
-      // failure. Volume stays capped at 100% for it.
-      entry = { source: null, gainNode: null, failed: true };
-    }
-    registry.set(el, entry);
-    return entry;
   }
 
   function applyToAllKnown(root) {
