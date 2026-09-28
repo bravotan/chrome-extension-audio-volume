@@ -72,7 +72,7 @@
       slider.type = "range";
       slider.min = "0";
       slider.max = "100";
-      slider.step = "5";
+      slider.step = "1";
       slider.value = String(RULES.clampVolume(rule.volume));
       slider.className = "volume-mini-slider";
       const valueSpan = document.createElement("span");
