@@ -46,9 +46,15 @@
     );
   }
 
+  // Persists run one at a time: overlapping read-modify-write cycles on the
+  // rules array could create duplicate rules for the same host or lose updates.
+  let persistChain = Promise.resolve();
+
   function schedulePersist() {
     clearTimeout(persistTimer);
-    persistTimer = setTimeout(persistRule, 250);
+    persistTimer = setTimeout(() => {
+      persistChain = persistChain.then(persistRule).catch((err) => console.warn("persist failed", err));
+    }, 250);
   }
 
   async function persistRule() {
@@ -56,11 +62,13 @@
     const isDefault = volume === RULES.DEFAULT_VOLUME && !muted;
     if (isDefault) {
       if (existingRuleId) {
-        await STORAGE.deleteRule(existingRuleId);
+        const oldId = existingRuleId;
         existingRuleId = null;
+        await STORAGE.deleteRule(oldId);
       }
     } else {
       const id = existingRuleId || RULES.createRuleId();
+      existingRuleId = id;
       await STORAGE.upsertRule({
         id,
         pattern: host,
@@ -209,7 +217,14 @@
       els.favicon.style.visibility = "hidden";
     }
 
-    await loadForScope(RULES.SCOPE_DOMAIN);
+    // A path rule beats a domain rule, so if one applies to this page, start in
+    // path scope. Otherwise edits made in domain scope would be previewed
+    // correctly but silently overridden by the path rule afterwards.
+    const currentRules = await STORAGE.getRules();
+    const applied = RULES.findBestRule(currentRules, host, path);
+    const initialScope = applied && applied.scope === RULES.SCOPE_PATH ? RULES.SCOPE_PATH : RULES.SCOPE_DOMAIN;
+    els.scopeSelect.value = initialScope;
+    await loadForScope(initialScope);
 
     els.scopeSelect.addEventListener("change", (e) => loadForScope(e.target.value));
     els.volumeSlider.addEventListener("input", (e) => onVolumeInput(e.target.value));

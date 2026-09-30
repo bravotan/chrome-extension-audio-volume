@@ -1,6 +1,6 @@
 // Runs in every page (and every frame). Finds <audio>/<video> elements and applies
-// the matching domain/path volume rule via the native HTMLMediaElement.volume API
-// (0-100%). Deliberately does not attempt to boost past 100% via the Web Audio
+// the matching domain/path volume rule as a 0-100% multiplier on top of the page's
+// own volume (see main-world.js). Deliberately does not attempt to boost past 100% via the Web Audio
 // API — that routing is irreversible once made (an element can never go back to
 // playing directly to speakers) and silently breaks forever on autoplay-suspended
 // contexts or DRM-protected media, so it isn't worth the fragility.
@@ -18,18 +18,39 @@
   let effectiveMuted = false;
   let previewTimer = null;
 
+  // The actual volume change happens in main-world.js (it wraps the page's own
+  // el.volume so the site's slider/normalisation is respected and multiplied by
+  // this rule's factor). This script only tells it which factor to use and which
+  // elements exist, and handles the mute flag.
+  function sendFactor() {
+    const v = RULES.clampVolume(effectiveVolume);
+    document.dispatchEvent(new CustomEvent("__vd_factor", { detail: String(v / 100) }));
+  }
+
+  // Elements we muted ourselves, so un-muting the rule doesn't undo a mute the
+  // user set with the site's own controls.
+  const mutedByUs = new WeakSet();
+
   function applyToElement(el) {
     if (!(el instanceof HTMLMediaElement)) return;
-    const safeVolume = RULES.clampVolume(effectiveVolume);
     try {
-      el.volume = safeVolume / 100;
+      el.dispatchEvent(new CustomEvent("__vd_adopt", { bubbles: true, composed: true }));
     } catch {
-      /* some elements briefly throw while not yet attached to a media resource */
+      /* ignore */
     }
-    el.muted = Boolean(effectiveMuted) || safeVolume === 0;
+    if (effectiveMuted) {
+      if (!el.muted) {
+        el.muted = true;
+        mutedByUs.add(el);
+      }
+    } else if (mutedByUs.has(el)) {
+      el.muted = false;
+      mutedByUs.delete(el);
+    }
   }
 
   function applyToAllKnown(root) {
+    sendFactor();
     collectMediaElements(root || document).forEach(applyToElement);
   }
 
@@ -117,6 +138,9 @@
       clearTimeout(previewTimer);
       previewTimer = setTimeout(() => {
         previewTimer = null;
+        // Storage echoes during the preview were skipped; reconcile now so the
+        // page always ends up matching what is actually saved.
+        refreshFromStorage();
       }, 1500);
       sendResponse({ ok: true });
     } else if (message.type === "VD_GET_STATE") {

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "__MSG_extName__",
   "description": "__MSG_extDescription__",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "default_locale": "en",
   "icons": {
     "16": "icons/icon16.png",
@@ -23,15 +23,40 @@
   "background": {
     "service_worker": "src/background/background.js"
   },
-  "permissions": ["storage", "tabs"],
-  "host_permissions": ["http://*/*", "https://*/*"],
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["src/lib/rules.js", "src/lib/storage.js", "src/content/content.js"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/content/main-world.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/lib/rules.js",
+        "src/lib/storage.js",
+        "src/content/content.js"
+      ],
       "run_at": "document_start",
       "all_frames": true
     }
   ],
-  "minimum_chrome_version": "102"
+  "minimum_chrome_version": "111"
 }

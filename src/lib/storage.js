@@ -39,13 +39,30 @@
     }
   }
 
+  // Rules are always written to local (no quota/rate limits) and mirrored to
+  // sync when possible. Reads take whichever copy has the newer timestamp, so a
+  // failed sync write can no longer leave reads returning stale data.
+  const RULES_TS_KEY = "vd_rules_ts";
+
   async function getRules() {
-    const result = await get(getArea(), [RULES_KEY]);
-    return Array.isArray(result[RULES_KEY]) ? result[RULES_KEY] : [];
+    const [s, l] = await Promise.all([
+      get(chrome.storage.sync || chrome.storage.local, [RULES_KEY, RULES_TS_KEY]).catch(() => ({})),
+      get(chrome.storage.local, [RULES_KEY, RULES_TS_KEY]).catch(() => ({})),
+    ]);
+    const pick = (l[RULES_TS_KEY] || 0) > (s[RULES_TS_KEY] || 0) ? l : s;
+    return Array.isArray(pick[RULES_KEY]) ? pick[RULES_KEY] : [];
   }
 
   async function saveRules(rules) {
-    await setWithFallback({ [RULES_KEY]: rules });
+    const items = { [RULES_KEY]: rules, [RULES_TS_KEY]: Date.now() };
+    await set(chrome.storage.local, items);
+    if (chrome.storage.sync) {
+      try {
+        await set(chrome.storage.sync, items);
+      } catch (err) {
+        console.warn("Volume Domain: sync storage failed, rules kept in local", err);
+      }
+    }
     return rules;
   }
 
