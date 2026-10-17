@@ -18,16 +18,53 @@
   let effectiveMuted = false;
   let previewTimer = null;
 
-  function applyToElement(el) {
+  // Some sites' own players (Reddit's included) keep their own volume state
+  // and periodically write it back to the <video> element, silently undoing
+  // whatever we just set. We don't want to permanently fight the user's own
+  // manual adjustments via the native player controls, so instead of always
+  // watching "volumechange", we only enforce our value for a short window
+  // right after we apply it — long enough to win against a site's own
+  // re-assertion, short enough to leave later, genuinely user-driven changes
+  // alone. Capped retries guard against a site that fights on every frame.
+  const ENFORCE_WINDOW_MS = 3000;
+  const MAX_ENFORCE_RETRIES = 5;
+  const enforcement = new WeakMap(); // element -> { volume, muted, until, retries }
+
+  function applyToElement(el, { enforce = true } = {}) {
     if (!(el instanceof HTMLMediaElement)) return;
     const safeVolume = RULES.clampVolume(effectiveVolume);
+    const targetVolume = safeVolume / 100;
+    const targetMuted = Boolean(effectiveMuted) || safeVolume === 0;
     try {
-      el.volume = safeVolume / 100;
+      el.volume = targetVolume;
     } catch {
       /* some elements briefly throw while not yet attached to a media resource */
     }
-    el.muted = Boolean(effectiveMuted) || safeVolume === 0;
+    el.muted = targetMuted;
+    if (enforce) {
+      enforcement.set(el, { volume: targetVolume, muted: targetMuted, until: Date.now() + ENFORCE_WINDOW_MS, retries: 0 });
+    }
   }
+
+  function onVolumeChange(evt) {
+    const el = evt.target;
+    if (!(el instanceof HTMLMediaElement)) return;
+    const entry = enforcement.get(el);
+    if (!entry) return;
+    if (Date.now() > entry.until || entry.retries >= MAX_ENFORCE_RETRIES) {
+      enforcement.delete(el);
+      return;
+    }
+    const driftedVolume = Math.abs(el.volume - entry.volume) > 0.01;
+    const driftedMuted = el.muted !== entry.muted;
+    if (!driftedVolume && !driftedMuted) return;
+    // The site just overwrote our value — reassert it without resetting the
+    // enforcement window's expiry, so this can't be extended indefinitely.
+    el.volume = entry.volume;
+    el.muted = entry.muted;
+    entry.retries += 1;
+  }
+  document.addEventListener("volumechange", onVolumeChange, true);
 
   function applyToAllKnown(root) {
     collectMediaElements(root || document).forEach(applyToElement);
@@ -82,9 +119,6 @@
     const el = evt.target;
     if (el instanceof HTMLMediaElement) applyToElement(el);
   }
-  // Note: deliberately not listening for "volumechange" here — that would
-  // fight the page's own volume slider every time the user nudges it. The
-  // rule only re-asserts itself on load, on new elements, and when it changes.
   document.addEventListener("play", onMediaEvent, true);
   document.addEventListener("loadeddata", onMediaEvent, true);
 
