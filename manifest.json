@@ -23,15 +23,40 @@
   "background": {
     "service_worker": "src/background/background.js"
   },
-  "permissions": ["storage", "tabs"],
-  "host_permissions": ["http://*/*", "https://*/*"],
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["src/lib/rules.js", "src/lib/storage.js", "src/content/content.js"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/content/main-world.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/lib/rules.js",
+        "src/lib/storage.js",
+        "src/content/content.js"
+      ],
       "run_at": "document_start",
       "all_frames": true
     }
   ],
-  "minimum_chrome_version": "102"
+  "minimum_chrome_version": "111"
 }
