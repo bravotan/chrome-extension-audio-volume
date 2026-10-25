@@ -1,6 +1,6 @@
 # Privacy Policy — Volume Reducer
 
-_Last updated: 2026-09-28_
+_Last updated: 2026-10-25_
 
 Volume Reducer ("the extension") does not collect, transmit, or sell any user
 data.
@@ -21,15 +21,21 @@ saved using Chrome's built-in `chrome.storage.sync` API (falling back to
 
 ## What the extension can access
 
-To apply your volume settings, the extension's content script runs on the
-pages you visit and reads:
+To apply your volume settings, two content scripts run on the pages you
+visit:
 
-- The page's URL (domain and path), to determine which of your saved rules
-  applies.
-- `<audio>`/`<video>` elements on the page, to set their `volume` and
-  `muted` properties.
+- An isolated-world script that reads the page's URL (domain and path) to
+  determine which of your saved rules applies, and sets `muted` on
+  `<audio>`/`<video>` elements accordingly.
+- A main-world script (`src/content/main-world.js`) that wraps the
+  standard `HTMLMediaElement.volume` property so your rule is applied as a
+  multiplier on top of whatever volume the page itself sets — this way a
+  site's own volume slider or loudness normalization keeps working, and
+  your rule just scales it, rather than fighting it. This script only
+  reads and adjusts that one property; it does not read page content, form
+  data, or any other information.
 
-It does not read, log, or transmit page content, form data, browsing
+Neither script reads, logs, or transmits page content, form data, browsing
 history, or any other information from the pages you visit.
 
 ## Permissions used
@@ -54,7 +60,7 @@ GitHub repository.
 
 # プライバシーポリシー — 音量絞り器 (Volume Reducer)
 
-_最終更新日: 2026-09-28_
+_最終更新日: 2026-10-25_
 
 音量絞り器(以下「本拡張機能」)は、ユーザーのデータを収集・送信・販売することは一切ありません。
 
@@ -68,12 +74,12 @@ _最終更新日: 2026-09-28_
 
 ## 本拡張機能がアクセスする情報
 
-音量設定を適用するため、本拡張機能のコンテンツスクリプトは閲覧中のページ上で以下を読み取ります:
+音量設定を適用するため、閲覧中のページ上で2つのコンテンツスクリプトが動作します:
 
-- ページのURL(ドメイン・パス)— どの保存済みルールを適用するか判定するため。
-- ページ内の`<audio>`/`<video>`要素 — `volume`・`muted`プロパティを設定するため。
+- 分離環境(isolated world)で動作するスクリプト — ページのURL(ドメイン・パス)を読み取り、どの保存済みルールを適用するか判定し、`<audio>`/`<video>`要素の`muted`プロパティを設定します。
+- ページ本体の実行環境(main world)で動作するスクリプト(`src/content/main-world.js`)— 標準の`HTMLMediaElement.volume`プロパティをラップし、ページ自身が設定する音量に対してルールを倍率として適用します。これにより、サイト自体の音量スライダーやラウドネス正規化を壊さずに、その上から比率で音量を調整できます。このスクリプトが読み書きするのはこのプロパティのみで、ページの内容やフォームの入力内容などを読み取ることはありません。
 
-ページの内容、フォームの入力内容、閲覧履歴などの情報を読み取ったり、記録したり、送信したりすることはありません。
+いずれのスクリプトも、ページの内容、フォームの入力内容、閲覧履歴などの情報を読み取ったり、記録したり、送信したりすることはありません。
 
 ## 使用している権限
 
