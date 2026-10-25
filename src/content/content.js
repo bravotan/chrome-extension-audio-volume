@@ -103,9 +103,6 @@
     const el = evt.target;
     if (el instanceof HTMLMediaElement) applyToElement(el);
   }
-  // Note: deliberately not listening for "volumechange" here — that would
-  // fight the page's own volume slider every time the user nudges it. The
-  // rule only re-asserts itself on load, on new elements, and when it changes.
   document.addEventListener("play", onMediaEvent, true);
   document.addEventListener("loadeddata", onMediaEvent, true);
 
