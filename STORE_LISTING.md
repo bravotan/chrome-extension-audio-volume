@@ -11,7 +11,7 @@ Not part of the extension package itself.
   listing).
 - **Category**: Tools (or Productivity — both fit)
 - **Language**: English (default), with Japanese `_locales` already bundled
-- **Version**: 1.0.0
+- **Version**: 1.0.2
 
 **Privacy Policy URL**: `main` now carries the same content as the feature
 branch, so use the stable URL:
@@ -41,24 +41,29 @@ FEATURES
 • Set 0–100% volume for a domain (youtube.com) or a wildcard subdomain
   (*.spotify.com)
 • Or scope a rule to a single page path only, e.g. example.com/ads
+• Works with the site's own volume instead of against it — your rule is
+  applied as a multiplier on top of whatever volume the page itself sets,
+  so its slider and loudness normalization keep working
 • Mute a site entirely
 • Rules apply automatically every time you visit — set it once and forget it
 • Manage everything from one settings page: edit, delete, import/export as
   JSON for backup
-• Settings sync automatically via your Google account (falls back to local
-  storage if sync is off)
+• Settings save locally and sync across your signed-in devices via your
+  Google account when sync is available
 • English and Japanese interface, switchable from the popup or settings page
 
 HOW IT WORKS
 Click the toolbar icon on any page to see and adjust its volume. Choose
 whether the rule applies to the whole domain or just the current page path,
 move the slider, and it's saved instantly — no page reload needed for most
-sites.
+sites. Because the rule scales the page's own volume rather than
+overriding it, sites that manage their own volume state (custom players,
+loudness normalization) keep working the way they're supposed to.
 
 PRIVACY
 Volume Reducer collects no data and makes no network requests of its own.
-Your volume rules stay on your device, synced only through your own Google
-account via Chrome's built-in sync. Full privacy policy:
+Your volume rules are saved locally and synced only through your own
+Google account via Chrome's built-in sync. Full privacy policy:
 https://github.com/bravotan/chrome-extension-audio-volume/blob/main/PRIVACY.md
 ```
 
@@ -71,20 +76,27 @@ JA:
 • ドメイン単位(youtube.com)やワイルドカードのサブドメイン(*.spotify.com)ごとに
   音量(0〜100%)を設定
 • ページのパス単位(例: example.com/ads)だけに適用することも可能
+• サイト自身の音量設定と戦わず、その上から比率で調整 — ページ自身が設定する音量に
+  対してルールを倍率として適用するので、サイト独自の音量スライダーやラウドネス正規化を
+  壊しません
 • サイトを完全にミュート
 • 一度設定すれば、次回訪問時から自動で適用
 • 設定ページから一覧管理・編集・削除・JSONでのインポート/エクスポートが可能
-• Googleアカウント経由で設定を自動同期(同期が無効な場合はローカルに保存)
+• 設定はローカルに保存され、同期が利用できる場合はGoogleアカウント経由で
+  サインイン済みデバイス間に自動同期
 • 日本語・英語のUI切り替えに対応
 
 使い方
 好きなページでツールバーのアイコンをクリックすると、そのページの音量を確認・調整できます。
 ドメイン全体に適用するか、現在のパスのみに適用するかを選び、スライダーを動かすだけで
-即座に保存されます。
+即座に保存されます。ルールはページ自身の音量を上書きするのではなく比率で調整するため、
+独自の音量管理を行うプレイヤー(カスタムプレイヤーやラウドネス正規化)でも本来の挙動が
+保たれます。
 
 プライバシーについて
-「音量絞り器」はユーザーデータを収集せず、外部通信も一切行いません。設定はお使いの
-Googleアカウント経由のChrome同期のみを通じて保存されます。プライバシーポリシー全文:
+「音量絞り器」はユーザーデータを収集せず、外部通信も一切行いません。設定はローカルに
+保存され、お使いのGoogleアカウント経由のChrome同期のみを通じて同期されます。
+プライバシーポリシー全文:
 https://github.com/bravotan/chrome-extension-audio-volume/blob/main/PRIVACY.md
 ```
 
@@ -98,11 +110,16 @@ permission. Suggested text:
 - **tabs** — "Used to read the active tab's URL so the popup can display and
   apply the volume rule for the site the user is currently on, and to update
   the toolbar badge with the current site's volume."
-- **Host permissions (http://\*/\*, https://\*/\*)** — "The content script
-  needs to run on any site the user chooses to set a volume rule for, since
-  the set of sites isn't known in advance. It only reads the page's URL and
-  adjusts the volume of `<audio>`/`<video>` elements — it does not read or
-  transmit page content."
+- **Host permissions (http://\*/\*, https://\*/\*)** — "The set of sites a
+  user might set a volume rule for isn't known in advance, so two content
+  scripts need to be able to run on any site. One reads the page's URL to
+  determine which rule applies. The other runs in the page's own JavaScript
+  world (MAIN) and wraps the standard `HTMLMediaElement.volume` property so
+  the rule is applied as a multiplier on top of whatever volume the page
+  itself sets — this lets a site's own volume slider or loudness
+  normalization keep working, instead of being overridden. Neither script
+  reads or transmits anything beyond the URL and that one audio/video
+  property."
 - **Are you using remote code?** — No. All code ships in the package; no
   `eval`, remote scripts, or dynamically fetched code.
 - **Data usage disclosure** — Select "This item does not collect or use
