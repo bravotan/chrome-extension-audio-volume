@@ -57,6 +57,15 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === "loading" || changeInfo.url) {
     updateBadgeForTab(tabId, tab.url);
   }
+  if (changeInfo.url) {
+    // Frames can't see the top-level URL themselves (cross-origin iframes), and
+    // SPA navigations happen in the page's own world, so tell every frame.
+    chrome.tabs.sendMessage(
+      tabId,
+      { target: "VD_CONTENT", type: "VD_TAB_URL", url: changeInfo.url },
+      () => void chrome.runtime.lastError
+    );
+  }
 });
 
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
@@ -77,5 +86,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "VD_REFRESH_BADGE") {
     refreshActiveTabBadge().then(() => sendResponse({ ok: true }));
     return true;
+  }
+  if (message.type === "VD_GET_TAB_URL") {
+    sendResponse({ url: sender.tab ? sender.tab.url : null });
   }
 });
