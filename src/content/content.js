@@ -106,10 +106,35 @@
   document.addEventListener("play", onMediaEvent, true);
   document.addEventListener("loadeddata", onMediaEvent, true);
 
+  // A cross-origin iframe (e.g. an embedded YouTube player on reddit.com) only
+  // sees its own URL, but the user set the rule for the page the tab is showing.
+  // So frames match against the tab's URL first and fall back to their own.
+  const isTopFrame = window === window.top;
+  let tabTarget; // undefined until fetched; null when the tab URL isn't http(s)
+
+  function getTabTarget() {
+    if (isTopFrame || tabTarget !== undefined) return Promise.resolve(tabTarget || null);
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({ target: "VD_BACKGROUND", type: "VD_GET_TAB_URL" }, (res) => {
+          if (chrome.runtime.lastError || !res) {
+            resolve(null);
+            return;
+          }
+          tabTarget = RULES.parseTargetUrl(res.url || "");
+          resolve(tabTarget);
+        });
+      } catch {
+        resolve(null);
+      }
+    });
+  }
+
   async function refreshFromStorage() {
     try {
-      const rules = await STORAGE.getRules();
-      const rule = RULES.findBestRule(rules, host, path);
+      const [rules, tab] = await Promise.all([STORAGE.getRules(), getTabTarget()]);
+      const rule =
+        (tab && RULES.findBestRule(rules, tab.host, tab.path)) || RULES.findBestRule(rules, host, path);
       effectiveVolume = rule ? RULES.clampVolume(rule.volume) : RULES.DEFAULT_VOLUME;
       effectiveMuted = rule ? Boolean(rule.muted) : false;
     } catch {
@@ -139,6 +164,14 @@
         // page always ends up matching what is actually saved.
         refreshFromStorage();
       }, 1500);
+      sendResponse({ ok: true });
+    } else if (message.type === "VD_TAB_URL") {
+      if (isTopFrame) {
+        handleLocationChange();
+      } else {
+        tabTarget = RULES.parseTargetUrl(message.url || "");
+        refreshFromStorage();
+      }
       sendResponse({ ok: true });
     } else if (message.type === "VD_GET_STATE") {
       sendResponse({ ok: true, host, path, volume: effectiveVolume, muted: effectiveMuted });
